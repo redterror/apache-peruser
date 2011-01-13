@@ -2492,7 +2492,7 @@ diff -Nur httpd-2.2.17/server/mpm/experimental/peruser/mpm_default.h httpd-2.2.1
 +#endif /* AP_MPM_DEFAULT_H */
 diff -Nur httpd-2.2.17/server/mpm/experimental/peruser/peruser.c httpd-2.2.17-peruser/server/mpm/experimental/peruser/peruser.c
 --- httpd-2.2.17/server/mpm/experimental/peruser/peruser.c	1969-12-31 21:00:00.000000000 -0300
-+++ httpd-2.2.17-peruser/server/mpm/experimental/peruser/peruser.c	2011-01-13 15:59:44.000000000 -0200
++++ httpd-2.2.17-peruser/server/mpm/experimental/peruser/peruser.c	2011-01-13 17:04:25.000000000 -0200
 @@ -0,0 +1,4447 @@
 +/* ====================================================================
 + * The Apache Software License, Version 1.1
@@ -3742,8 +3742,11 @@ diff -Nur httpd-2.2.17/server/mpm/experimental/peruser/peruser.c httpd-2.2.17-pe
 +
 +    _DBG("Creating dummy connection to use the vhost lookup api", 0);
 +
-+    ap_create_sb_handle(&sbh, p, conn_id, 0);
-+    current_conn = ap_run_create_connection(p, ap_server_conf, sock, conn_id,
++    _DBG("Creating new pool",0);
++    apr_pool_create(&ptrans, p);
++
++    ap_create_sb_handle(&sbh, ptrans, conn_id, 0);
++    current_conn = ap_run_create_connection(ptrans, ap_server_conf, sock, conn_id,
 +                                            sbh, bucket_alloc);
 +    _DBG("Looking up the right vhost");
 +
@@ -3759,9 +3762,6 @@ diff -Nur httpd-2.2.17/server/mpm/experimental/peruser/peruser.c httpd-2.2.17-pe
 +            ssl_on = ssl_server_is_https(current_conn->base_server);
 +        }
 +    }
-+
-+    _DBG("Creating new pool",0);
-+    apr_pool_create(&ptrans, pool);
 +
 +    if (current_conn && (!current_conn->vhost_lookup_data || ssl_on)
 +            && CHILD_INFO_TABLE[my_child_num].type == CHILD_TYPE_MULTIPLEXER) {
