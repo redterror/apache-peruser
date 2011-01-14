@@ -1,0 +1,5 @@
+
+LTLIBRARY_NAME    = libperuser.la
+LTLIBRARY_SOURCES = peruser.c
+
+include $(top_srcdir)/build/ltlib.mk

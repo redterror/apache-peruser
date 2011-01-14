@@ -58,6 +58,12 @@ static int ssl_is_https(conn_rec *c)
     return sslconn && sslconn->ssl;
 }
 
+static int ssl_server_is_https(server_rec *s)
+{
+    SSLSrvConfigRec *sslsrv = mySrvConfig(s);
+    return sslsrv && sslsrv->enabled;
+}
+
 static const char var_interface[] = "mod_ssl/" MOD_SSL_VERSION;
 static char var_library_interface[] = SSL_LIBRARY_TEXT;
 static char *var_library = NULL;
@@ -67,6 +73,7 @@ void ssl_var_register(apr_pool_t *p)
     char *cp, *cp2;
 
     APR_REGISTER_OPTIONAL_FN(ssl_is_https);
+    APR_REGISTER_OPTIONAL_FN(ssl_server_is_https);
     APR_REGISTER_OPTIONAL_FN(ssl_var_lookup);
     APR_REGISTER_OPTIONAL_FN(ssl_ext_lookup);
 

@@ -29,9 +29,10 @@
 #include "ap_config.h"
 #include "httpd.h"
 
-#define AP_STATUS_SHORT    (0x1)  /* short, non-HTML report requested */
-#define AP_STATUS_NOTABLE  (0x2)  /* HTML report without tables */
-#define AP_STATUS_EXTENDED (0x4)  /* detailed report */
+#define AP_STATUS_SHORT            (0x1)  /* short, non-HTML report requested */
+#define AP_STATUS_NOTABLE          (0x2)  /* HTML report without tables */
+#define AP_STATUS_EXTENDED         (0x4)  /* detailed report */
+#define AP_STATUS_PERUSER_STATS    (0x8)  /* peruser mpm extended status */
 
 #if !defined(WIN32)
 #define STATUS_DECLARE(type)            type
