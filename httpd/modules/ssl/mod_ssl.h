@@ -50,6 +50,10 @@ APR_DECLARE_OPTIONAL_FN(const char *, ssl_ext_lookup,
  * is using SSL/TLS. */
 APR_DECLARE_OPTIONAL_FN(int, ssl_is_https, (conn_rec *));
 
+/** An optional function which returns non-zero if the given server
+ * is using SSL/TLS. */
+APR_DECLARE_OPTIONAL_FN(int, ssl_server_is_https, (server_rec *));
+
 /** The ssl_proxy_enable() and ssl_engine_disable() optional functions
  * are used by mod_proxy to enable use of SSL for outgoing
  * connections. */

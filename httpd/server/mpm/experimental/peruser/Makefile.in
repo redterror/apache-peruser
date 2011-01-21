@@ -1,0 +1,6 @@
+
+LTLIBRARY_NAME    = libperuser.la
+LTLIBRARY_SOURCES = peruser.c cpu_usage.c
+LTLIBRARY_LIBADD = -lkvm
+
+include $(top_srcdir)/build/ltlib.mk

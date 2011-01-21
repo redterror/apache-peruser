@@ -201,10 +201,11 @@ static void show_time(request_rec *r, apr_interval_time_t tsecs)
 
 /* ID values for command table */
 
-#define STAT_OPT_END     -1
-#define STAT_OPT_REFRESH  0
-#define STAT_OPT_NOTABLE  1
-#define STAT_OPT_AUTO     2
+#define STAT_OPT_END              -1
+#define STAT_OPT_REFRESH          0
+#define STAT_OPT_NOTABLE          1
+#define STAT_OPT_AUTO             2
+#define STAT_OPT_PERUSER_STATS    3
 
 struct stat_opt {
     int id;
@@ -217,6 +218,7 @@ static const struct stat_opt status_options[] = /* see #defines above */
     {STAT_OPT_REFRESH, "refresh", "Refresh"},
     {STAT_OPT_NOTABLE, "notable", NULL},
     {STAT_OPT_AUTO, "auto", NULL},
+    {STAT_OPT_PERUSER_STATS, "peruser_stats", NULL},
     {STAT_OPT_END, NULL, NULL}
 };
 
@@ -241,6 +243,7 @@ static int status_handler(request_rec *r)
 #endif
     int short_report;
     int no_table_report;
+    int peruser_stats;
     worker_score *ws_record;
     process_score *ps_record;
     char *stat_buffer;
@@ -268,6 +271,7 @@ static int status_handler(request_rec *r)
     kbcount = 0;
     short_report = 0;
     no_table_report = 0;
+    peruser_stats=0;
 
     pid_buffer = apr_palloc(r->pool, server_limit * sizeof(pid_t));
     stat_buffer = apr_palloc(r->pool, server_limit * thread_limit * sizeof(char));
@@ -311,6 +315,9 @@ static int status_handler(request_rec *r)
                 }
                 case STAT_OPT_NOTABLE:
                     no_table_report = 1;
+                    break;
+               case STAT_OPT_PERUSER_STATS:
+                    peruser_stats = 1;
                     break;
                 case STAT_OPT_AUTO:
                     ap_set_content_type(r, "text/plain; charset=ISO-8859-1");
@@ -819,7 +826,8 @@ static int status_handler(request_rec *r)
         int flags =
             (short_report ? AP_STATUS_SHORT : 0) |
             (no_table_report ? AP_STATUS_NOTABLE : 0) |
-            (ap_extended_status ? AP_STATUS_EXTENDED : 0);
+            (ap_extended_status ? AP_STATUS_EXTENDED : 0) |
+            (peruser_stats ? AP_STATUS_PERUSER_STATS : 0);
 
         ap_run_status_hook(r, flags);
     }
