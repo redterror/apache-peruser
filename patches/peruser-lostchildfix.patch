@@ -1,0 +1,110 @@
+--- peruser-orig/server/mpm/experimental/peruser/peruser.c	2011-01-22 12:20:03.000000000 +0200
++++ peruser-devel/server/mpm/experimental/peruser/peruser.c	2011-01-22 12:20:27.000000000 +0200
+@@ -1064,6 +1064,20 @@
+     return;
+ }
+ 
++static void activate_child(child_info_t *child) {
++    if (child->status == CHILD_STATUS_STANDBY) {
++        child->status = CHILD_STATUS_STARTING;
++
++        if (child->pid == 0) {
++            _DBG("Activating child #%d", child->id);
++            child_info_image->control->new = 1;
++            child->senv->total_processors++;
++            child->senv->idle_processors++;
++            child->senv->total_processes++;
++        }
++    }
++}
++
+ static int wait_for_workers(child_info_t *processor)
+ {
+     int i, wait_step_size, wait_time;
+@@ -1231,14 +1245,7 @@
+     msg.msg_control = cmsg;
+     msg.msg_controllen = cmsg->cmsg_len;
+ 
+-    if (processor->status == CHILD_STATUS_STANDBY) {
+-        _DBG("Activating child #%d", processor->id);
+-        processor->status = CHILD_STATUS_STARTING;
+-        child_info_image->control->new = 1;
+-        processor->senv->total_processors++;
+-        processor->senv->idle_processors++;
+-        processor->senv->total_processes++;
+-    }
++    activate_child(processor);
+ 
+     _DBG("Writing message to %d, passing sock_fd:  %d", processor->senv->output,
+          sock_fd);
+@@ -1307,14 +1314,7 @@
+             _DBG("Forwarding without further inspection, processor %d",
+                  processor->id);
+ 
+-            if (processor->status == CHILD_STATUS_STANDBY) {
+-                _DBG("Activating child #%d", processor->id);
+-                processor->status = CHILD_STATUS_STARTING;
+-                child_info_image->control->new = 1;
+-                processor->senv->total_processors++;
+-                processor->senv->idle_processors++;
+-                processor->senv->total_processes++;
+-            }
++            activate_child(processor);
+ 
+             _DBG("Creating new pool",0);
+             apr_pool_create(&ptrans, pool);
+@@ -1577,14 +1577,7 @@
+     msg.msg_control = cmsg;
+     msg.msg_controllen = cmsg->cmsg_len;
+ 
+-    if (child->status == CHILD_STATUS_STANDBY) {
+-        _DBG("Activating child #%d", child->id);
+-        child->status = CHILD_STATUS_STARTING;
+-        child_info_image->control->new = 1;
+-        child->senv->total_processors++;
+-        child->senv->idle_processors++;
+-        child->senv->total_processes++;
+-    }
++    activate_child(child);
+ 
+     _DBG("Writing message to %d, passing sock_fd:  %d", child->senv->output,
+          sock_fd);
+@@ -2487,7 +2480,7 @@
+ {
+     int pid;
+ 
+-    _DBG("function entered", 0);
++    _DBG("function entered slot=%d", slot);
+     dump_server_env_image();
+ 
+     switch (CHILD_INFO_TABLE[slot].type) {
+@@ -2683,7 +2676,8 @@
+             _DBG("Exiting... restart_pending = %d", restart_pending);
+             break;
+         }
+-        if (CHILD_INFO_TABLE[i].status == CHILD_STATUS_STARTING)
++        if (CHILD_INFO_TABLE[i].status == CHILD_STATUS_STARTING
++            && CHILD_INFO_TABLE[i].pid == 0)
+             make_child(ap_server_conf, i);
+     }
+ }
+@@ -3028,7 +3022,7 @@
+                 /* handled */
+ #endif
+             }
+-            else if (is_graceful) {
++            else {
+                 /* Great, we've probably just lost a slot in the
+                  * scoreboard.  Somehow we don't know about this
+                  * child.
+@@ -3558,8 +3552,8 @@
+ 
+         if (processor->id != my_child_num) {
+             if (processor->status == CHILD_STATUS_STANDBY) {
+-                _DBG("Activating child #%d", processor->id);
+-                processor->status = CHILD_STATUS_STARTING;
++                activate_child(processor);
++
+                 _DBG("New processor %s started", processor->senv->name);
+                 // Only start N processors if this is the first processor being started
+                 if (processor->senv->start_processors > 1
